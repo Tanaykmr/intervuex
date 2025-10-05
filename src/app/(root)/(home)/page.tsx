@@ -51,7 +51,7 @@ export default function Home() {
         </p>
       </div>
 
-      {isInterviewer ? (
+      {/* {isInterviewer ? ( */}
         <>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {QUICK_ACTIONS.map((action) => (
@@ -70,7 +70,7 @@ export default function Home() {
             isJoinMeeting={modalType === "join"}
           />
         </>
-      ) : (
+      {/* ) : ( */}
         <>
           <div>
             <h1 className="text-3xl font-bold">Your Interviews</h1>
@@ -95,7 +95,7 @@ export default function Home() {
             )}
           </div>
         </>
-      )}
+      {/* )} */}
     </div>
   );
 }
