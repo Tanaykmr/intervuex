@@ -21,7 +21,8 @@ export const groupInterviews = (interviews: Interview[]) => {
       acc.succeeded = [...(acc.succeeded || []), interview];
     } else if (interview.status === "failed") {
       acc.failed = [...(acc.failed || []), interview];
-    } else if (isBefore(date, now)) {
+    } else if (interview.status === "completed" || isBefore(date, now)) {
+      // Treat explicitly completed as completed immediately
       acc.completed = [...(acc.completed || []), interview];
     } else if (isAfter(date, now)) {
       acc.upcoming = [...(acc.upcoming || []), interview];

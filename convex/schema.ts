@@ -29,4 +29,13 @@ export default defineSchema({
     interviewerId: v.string(),
     interviewId: v.id("interviews"),
   }).index("by_interview_id", ["interviewId"]),
+
+  codeStates: defineTable({
+    streamCallId: v.string(),
+    language: v.string(),
+    questionId: v.string(),
+    code: v.string(),
+    updatedBy: v.string(),
+    updatedAt: v.number(),
+  }).index("by_stream_call_id", ["streamCallId"]),
 });

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import TimePicker from "@/components/TimePicker";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -29,10 +30,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { TIME_SLOTS } from "@/constants";
 import MeetingCard from "@/components/MeetingCard";
 
-function InterviewScheduleUI() {
+function InterviewScheduleUI({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const client = useStreamVideoClient();
   const { user } = useUser();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(!!defaultOpen);
   const [isCreating, setIsCreating] = useState(false);
 
   const interviews = useQuery(api.interviews.getAllInterviews) ?? [];
@@ -46,7 +47,8 @@ function InterviewScheduleUI() {
     title: "",
     description: "",
     date: new Date(),
-    time: "09:00",
+    startTime: "09:00",
+    endTime: "09:30",
     candidateId: "",
     interviewerIds: user?.id ? [user.id] : [],
   });
@@ -61,17 +63,25 @@ function InterviewScheduleUI() {
     setIsCreating(true);
 
     try {
-      const { title, description, date, time, candidateId, interviewerIds } = formData;
-      const [hours, minutes] = time.split(":");
-      const meetingDate = new Date(date);
-      meetingDate.setHours(parseInt(hours), parseInt(minutes), 0);
+      const { title, description, date, startTime, endTime, candidateId, interviewerIds } = formData;
+      const [sh, sm] = startTime.split(":");
+      const [eh, em] = endTime.split(":");
+      const start = new Date(date);
+      start.setHours(parseInt(sh), parseInt(sm), 0);
+      const end = new Date(date);
+      end.setHours(parseInt(eh), parseInt(em), 0);
+      if (end <= start) {
+        toast.error("End time must be after start time");
+        setIsCreating(false);
+        return;
+      }
 
       const id = crypto.randomUUID();
       const call = client.call("default", id);
 
       await call.getOrCreate({
         data: {
-          starts_at: meetingDate.toISOString(),
+          starts_at: start.toISOString(),
           custom: {
             description: title,
             additionalDetails: description,
@@ -82,7 +92,8 @@ function InterviewScheduleUI() {
       await createInterview({
         title,
         description,
-        startTime: meetingDate.getTime(),
+        startTime: start.getTime(),
+        endTime: end.getTime(),
         status: "upcoming",
         streamCallId: id,
         candidateId,
@@ -96,7 +107,8 @@ function InterviewScheduleUI() {
         title: "",
         description: "",
         date: new Date(),
-        time: "09:00",
+        startTime: "09:00",
+        endTime: "09:30",
         candidateId: "",
         interviewerIds: user?.id ? [user.id] : [],
       });
@@ -233,38 +245,35 @@ function InterviewScheduleUI() {
               </div>
 
               {/* DATE & TIME */}
-              <div className="flex gap-4">
+              <div className="space-y-4">
                 {/* CALENDAR */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Date</label>
-                  <Calendar
-                    mode="single"
-                    selected={formData.date}
-                    onSelect={(date) => date && setFormData({ ...formData, date })}
-                    disabled={(date) => date < new Date()}
-                    className="rounded-md border"
-                  />
+                  <div className="w-full flex justify-center">
+                    <Calendar
+                      mode="single"
+                      selected={formData.date}
+                      onSelect={(date) => date && setFormData({ ...formData, date })}
+                      disabled={(date) => date < new Date()}
+                      className="mx-auto"
+                    />
+                  </div>
                 </div>
 
-                {/* TIME */}
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Time</label>
-                  <Select
-                    value={formData.time}
-                    onValueChange={(time) => setFormData({ ...formData, time })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select time" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TIME_SLOTS.map((time) => (
-                        <SelectItem key={time} value={time}>
-                          {time}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                {/* TIME ROW */}
+                <div className="flex gap-4">
+                  <TimePicker
+                    label="Start time"
+                    value={formData.startTime}
+                    onChange={(v) => setFormData({ ...formData, startTime: v })}
+                    stepMinutes={5}
+                  />
+                  <TimePicker
+                    label="End time"
+                    value={formData.endTime}
+                    onChange={(v) => setFormData({ ...formData, endTime: v })}
+                    stepMinutes={5}
+                  />
                 </div>
               </div>
 
