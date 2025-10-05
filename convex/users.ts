@@ -18,8 +18,34 @@ export const syncUser = mutation({
 
     return await ctx.db.insert("users", {
       ...args,
-      role: "interviewer",
+      role: "candidate",
     });
+  },
+});
+
+export const updateUserRole = mutation({
+  args: {
+    clerkId: v.string(),
+    role: v.union(v.literal("candidate"), v.literal("interviewer")),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("User is not authenticated");
+
+    // Only allow users to update their own role (or extend with admin check)
+    if (identity.subject !== args.clerkId) {
+      throw new Error("Forbidden");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
+      .first();
+
+    if (!user) throw new Error("User not found");
+
+    await ctx.db.patch(user._id, { role: args.role });
+    return { ok: true };
   },
 });
 

@@ -38,7 +38,7 @@ function DashboardPage() {
 
   return (
     <div className="container mx-auto py-10">
-      <div className="flex items-center mb-8">
+      <div className="flex justify-center mb-8">
         <Link href="/schedule">
           <Button>Schedule New Interview</Button>
         </Link>
